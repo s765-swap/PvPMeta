@@ -1,0 +1,61 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        // ProGuard removed
+    }
+}
+
+plugins {
+    id 'fabric-loom' version '1.6-SNAPSHOT'
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
+}
+
+ext {
+    maven_group = 'com.swapnil.titlemod'
+    mod_version = '1.0.0-SECURE'
+    archives_base_name = 'titlemod'
+    
+    minecraft_version = '1.20.1'
+    yarn_mappings = '1.20.1+build.10'
+    loader_version = '0.16.14'
+    fabric_api_version = '0.92.2+1.20.1'
+}
+
+group = project.maven_group
+version = project.mod_version
+
+base {
+    archivesName = project.archives_base_name
+}
+
+java {
+    withSourcesJar()
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url "https://maven.fabricmc.net/" }
+    maven { url "https://maven.architectury.dev/" }
+}
+
+dependencies {
+    minecraft "net.minecraft:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+    implementation "com.google.code.gson:gson:2.10.1"
+    implementation 'org.bouncycastle:bcprov-jdk15on:1.70'
+    implementation 'commons-codec:commons-codec:1.15'
+}
+
+// ProGuard and obfuscation logic removed
+
+// Keep the Java compile settings
+tasks.withType(JavaCompile).configureEach {
+    it.options.encoding = "UTF-8"
+    it.options.release.set(17)
+}

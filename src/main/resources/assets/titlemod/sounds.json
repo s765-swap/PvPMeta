@@ -1,0 +1,34 @@
+{
+  "music.main_theme": {
+    "sounds": [
+      {
+        "name": "titlemod:music/main_theme",
+        "stream": true
+      }
+    ]
+  },
+  "music.menu_theme": {
+    "sounds": [
+      {
+        "name": "titlemod:music/menu_theme",
+        "stream": true
+      }
+    ]
+  },
+  "music.background_1": {
+    "sounds": [
+      {
+        "name": "titlemod:music/background_1",
+        "stream": true
+      }
+    ]
+  },
+  "music.background_2": {
+    "sounds": [
+      {
+        "name": "titlemod:music/background_2",
+        "stream": true
+      }
+    ]
+  }
+}
