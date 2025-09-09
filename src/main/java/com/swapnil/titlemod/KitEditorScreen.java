@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.swapnil.titlemod.gui.ModButtonWidget;
-import com.swapnil.titlemod.gui.TransparentButtonWidget; // Import TransparentButtonWidget
+import com.swapnil.titlemod.gui.TransparentButtonWidget;
 
 public class KitEditorScreen extends Screen {
     private final Screen parent;
@@ -42,17 +42,18 @@ public class KitEditorScreen extends Screen {
 
     @Override
     protected void init() {
-        // Back button using TransparentButtonWidget
+        
         this.addDrawableChild(new TransparentButtonWidget(10, 10, 90, 20,
                 Text.literal("← Back").formatted(Formatting.BOLD),
                 btn -> {
                     MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-                    MinecraftClient.getInstance().setScreen(parent);
+                    MinecraftClient.getInstance().setScreen(new CustomTitleScreen());
                 }
         ));
 
         createActionButton();
     }
+
 
     private void createActionButton() {
         int buttonWidth = 110;
@@ -71,9 +72,18 @@ public class KitEditorScreen extends Screen {
             action = (btn) -> {
                 MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0F));
                 String kitName = KIT_NAMES[selectedKitIndex];
-                MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(Text.literal("§a[Kit Editor] §fConnecting to kit editor server (" + com.swapnil.titlemod.config.ModConfig.getInstance().getKitEditorServerIp() + ":" + com.swapnil.titlemod.config.ModConfig.getInstance().getKitEditorServerPort() + ") for kit §b" + kitName + "§f..."));
-                MatchmakingClient.qwerty789(kitName);
-                MinecraftClient.getInstance().setScreen(null);
+                MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(Text.literal("§a[Kit Editor] §fConnecting to kit editor server (" + com.swapnil.titlemod.config.ModConfig.getInstance().getKitEditorServerIp() + ":" + com.swapnil.titlemod.config.ModConfig.getInstance().getKitEditorMinecraftPort() + ") for kit §b" + kitName + "§f..."));
+                
+                
+                MinecraftClient.getInstance().execute(() -> {
+                    try {
+                        Thread.sleep(1500); 
+                        MatchmakingClient.joinKitEditor(kitName);
+                        MinecraftClient.getInstance().setScreen(null);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                });
             };
         } else {
             buttonText = Text.literal("Select a Kit").formatted(Formatting.GRAY);
@@ -124,10 +134,11 @@ public class KitEditorScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+       
         RenderSystem.setShaderTexture(0, BACKGROUND);
         context.setShaderColor(1F, 1F, 1F, 1F);
         context.drawTexture(BACKGROUND, 0, 0, 0, 0, this.width, this.height, this.width, this.height);
-
+        
         int imageWidth = 80;
         int imageHeight = 115;
         int spacing = 12;
@@ -136,6 +147,18 @@ public class KitEditorScreen extends Screen {
 
         int startX = (this.width - totalWidth) / 2;
         int centerY = (this.height - imageHeight) / 2;
+        
+        
+        int gridX = startX - 20;
+        int gridY = centerY - 20;
+        int gridWidth = totalWidth + 40;
+        int gridHeight = imageHeight + 40;
+        
+       
+        context.fill(gridX, gridY, gridX + gridWidth, gridY + 1, 0x80FFFFFF);
+        context.fill(gridX, gridY + gridHeight - 1, gridX + gridWidth, gridY + gridHeight, 0x80FFFFFF);
+        context.fill(gridX, gridY, gridX + 1, gridY + gridHeight, 0x80FFFFFF);
+        context.fill(gridX + gridWidth - 1, gridY, gridX + gridWidth, gridY + gridHeight, 0x80FFFFFF);
 
         int hoveredIndex = -1;
 
@@ -148,31 +171,43 @@ public class KitEditorScreen extends Screen {
             if (flipStartTimes.containsKey(i)) {
                 long timePassed = System.currentTimeMillis() - flipStartTimes.get(i);
                 if (timePassed < 300) {
-                    float t = timePassed / 300f;
-                    scale = 1.0f - 0.3f * (float) Math.sin(t * Math.PI);
+                    float flipT = timePassed / 300f;
+                    scale = 1.0f - 0.3f * (float) Math.sin(flipT * Math.PI);
                 } else {
                     flipStartTimes.remove(i);
                 }
             }
 
-            if (mouseX >= x && mouseX <= x + imageWidth && mouseY >= y && mouseY <= y + imageHeight) {
+            boolean hovered = mouseX >= x && mouseX <= x + imageWidth && mouseY >= y && mouseY <= y + imageHeight;
+            if (hovered) {
                 hoveredIndex = i;
-                context.fill(x - 2, y - 2, x + imageWidth + 2, y + imageHeight + 2, 0x40FFFFFF);
+                int hoverGlow = 0x40FFFFFF;
+                context.fill(x - 2, y - 2, x + imageWidth + 2, y + imageHeight + 2, hoverGlow);
             }
 
             context.getMatrices().push();
-            context.getMatrices().translate(x + imageWidth / 2.0, y + imageHeight / 2.0, 0);
-            context.getMatrices().scale(scale, scale, 1);
-            context.getMatrices().translate(-(x + imageWidth / 2.0), -(y + imageHeight / 2.0), 0);
+            float lift = hovered ? -3.0f : 0.0f;
+            float hoverScale = hovered ? 1.03f : 1.0f;
+            context.getMatrices().translate(x + imageWidth / 2.0, y + imageHeight / 2.0 + lift, 0);
+            context.getMatrices().scale(scale * hoverScale, scale * hoverScale, 1);
+            context.getMatrices().translate(-(x + imageWidth / 2.0), -(y + imageHeight / 2.0 + lift), 0);
 
             RenderSystem.setShaderTexture(0, IMAGES[i]);
+            context.setShaderColor(1F, 1F, 1F, 1F);
             context.drawTexture(IMAGES[i], x, y, 0, 0, imageWidth, imageHeight, imageWidth, imageHeight);
 
             context.getMatrices().pop();
 
+            
+            if (hovered) {
+                int shadowColor = 0x30000000;
+                context.fill(x + 6, y + imageHeight - 3, x + imageWidth - 6, y + imageHeight + 3, shadowColor);
+            }
+
             if (selectedKitIndex == i) {
+                
                 context.fill(x, y, x + imageWidth, y + imageHeight, 0x40FFFFFF);
-                int borderColor = 0xD0FFFFFF;
+                int borderColor = 0xC0FFFF;
                 context.fill(x - 2, y - 2, x + imageWidth + 2, y, borderColor);
                 context.fill(x - 2, y + imageHeight, x + imageWidth + 2, y + imageHeight + 2, borderColor);
                 context.fill(x - 2, y, x, y + imageHeight, borderColor);

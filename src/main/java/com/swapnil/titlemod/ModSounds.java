@@ -6,28 +6,28 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 
 public class ModSounds {
-    // This is the logical name for our main theme sound.
+   
     public static final Identifier MAIN_THEME_IDENTIFIER = new Identifier("titlemod", "music.main_theme");
     public static SoundEvent MAIN_THEME_SOUND_EVENT = SoundEvent.of(MAIN_THEME_IDENTIFIER);
 
-    // This is the logical name for our menu theme sound.
+   
     public static final Identifier MENU_THEME_IDENTIFIER = new Identifier("titlemod", "music.menu_theme");
     public static SoundEvent MENU_THEME_SOUND_EVENT = SoundEvent.of(MENU_THEME_IDENTIFIER);
     
-    // Additional music tracks
+    
     public static final Identifier BACKGROUND_MUSIC_1_IDENTIFIER = new Identifier("titlemod", "music.background_1");
     public static SoundEvent BACKGROUND_MUSIC_1_SOUND_EVENT = SoundEvent.of(BACKGROUND_MUSIC_1_IDENTIFIER);
     
     public static final Identifier BACKGROUND_MUSIC_2_IDENTIFIER = new Identifier("titlemod", "music.background_2");
     public static SoundEvent BACKGROUND_MUSIC_2_SOUND_EVENT = SoundEvent.of(BACKGROUND_MUSIC_2_IDENTIFIER);
 
-    // This is the logical name for our button click sound.
+
     public static final Identifier BUTTON_CLICK_IDENTIFIER = new Identifier("titlemod", "ui.button_click");
     public static SoundEvent BUTTON_CLICK_SOUND_EVENT = SoundEvent.of(BUTTON_CLICK_IDENTIFIER);
 
-    // This method registers all custom sounds.
+
     public static void registerSounds() {
-        // We register all sound events with Minecraft's sound registry.
+        
         Registry.register(Registries.SOUND_EVENT, MAIN_THEME_IDENTIFIER, MAIN_THEME_SOUND_EVENT);
         Registry.register(Registries.SOUND_EVENT, MENU_THEME_IDENTIFIER, MENU_THEME_SOUND_EVENT);
         Registry.register(Registries.SOUND_EVENT, BACKGROUND_MUSIC_1_IDENTIFIER, BACKGROUND_MUSIC_1_SOUND_EVENT);

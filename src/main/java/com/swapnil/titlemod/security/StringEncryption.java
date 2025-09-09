@@ -8,7 +8,7 @@ import java.util.Base64;
 
 public class StringEncryption {
     private static final String ALGORITHM = "AES";
-    private static final String SECRET_KEY = "TitleModSecureKey2024!@#$";
+    private static final String SECRET_KEY = System.getProperty("titlemod.key", "TitleModSecureKey2024!@#$");
     
     public static String encrypt(String plainText) {
         try {
@@ -36,9 +36,11 @@ public class StringEncryption {
     
     private static SecretKeySpec generateKey() throws Exception {
         byte[] key = SECRET_KEY.getBytes(StandardCharsets.UTF_8);
-        MessageDigest sha = MessageDigest.getInstance("SHA-256");
-        key = sha.digest(key);
-        return new SecretKeySpec(key, 0, 16, ALGORITHM);
+        
+        byte[] key16 = new byte[16];
+        int len = Math.min(key.length, 16);
+        System.arraycopy(key, 0, key16, 0, len);
+        return new SecretKeySpec(key16, 0, 16, ALGORITHM);
     }
 
     public static void main(String[] args) {

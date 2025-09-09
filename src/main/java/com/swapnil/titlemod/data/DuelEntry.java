@@ -1,14 +1,13 @@
 package com.swapnil.titlemod.data;
 
-// This class defines the structure for a single duel entry
-public class DuelEntry {
-    private String player1Uuid;
-    private String player2Uuid;
-    private String winnerUuid;
-    private String loserUuid;
-    private long timestamp; // Unix timestamp in milliseconds
 
-    // Constructor to initialize a DuelEntry object
+public class DuelEntry {
+    private final String player1Uuid;
+    private final String player2Uuid;
+    private final String winnerUuid;
+    private final String loserUuid;
+    private final long timestamp;
+
     public DuelEntry(String player1Uuid, String player2Uuid, String winnerUuid, String loserUuid, long timestamp) {
         this.player1Uuid = player1Uuid;
         this.player2Uuid = player2Uuid;
@@ -17,36 +16,16 @@ public class DuelEntry {
         this.timestamp = timestamp;
     }
 
-    // Getter methods for each field
-    public String getPlayer1Uuid() {
-        return player1Uuid;
-    }
+ 
+    public String getPlayer1Uuid() { return player1Uuid; }
+    public String getPlayer2Uuid() { return player2Uuid; }
+    public String getWinnerUuid() { return winnerUuid; }
+    public String getLoserUuid() { return loserUuid; }
+    public long getTimestamp() { return timestamp; }
 
-    public String getPlayer2Uuid() {
-        return player2Uuid;
-    }
-
-    public String getWinnerUuid() {
-        return winnerUuid;
-    }
-
-    public String getLoserUuid() {
-        return loserUuid;
-    }
-
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    // Optional: toString method for easier debugging
     @Override
     public String toString() {
-        return "DuelEntry{" +
-                "player1Uuid='" + player1Uuid + '\'' +
-                ", player2Uuid='" + player2Uuid + '\'' +
-                ", winnerUuid='" + winnerUuid + '\'' +
-                ", loserUuid='" + loserUuid + '\'' +
-                ", timestamp=" + timestamp +
-                '}';
+        return String.format("DuelEntry{player1='%s', player2='%s', winner='%s', loser='%s', timestamp=%d}",
+                player1Uuid, player2Uuid, winnerUuid, loserUuid, timestamp);
     }
 }

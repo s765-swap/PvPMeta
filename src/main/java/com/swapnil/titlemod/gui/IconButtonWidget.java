@@ -10,50 +10,57 @@ import com.swapnil.titlemod.TitleMod;
 
 public class IconButtonWidget extends TransparentButtonWidget {
     private final Identifier iconTexture;
-    private boolean wasHovered = false; // Track hover state for sound
+    private boolean wasHovered = false; 
+    private float currentScale = 1.0F;
 
     public IconButtonWidget(int x, int y, int width, int height, Identifier iconTexture, PressAction onPress) {
-        // Pass empty text to super, as this button is primarily an icon
+        
         super(x, y, width, height, Text.empty(), onPress);
         this.iconTexture = iconTexture;
     }
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        // Play sound on hover entry
+       
         if (this.isHovered() && !wasHovered) {
             MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(TitleMod.BUTTON_HOVER_SOUND, 1.0F));
         }
         wasHovered = this.isHovered();
 
-        // Determine icon color/alpha based on hover state
-        float red = 1.0F, green = 1.0F, blue = 1.0F, alpha = 0.8F; // Default subtle transparency
+     
+        float red = 1.0F, green = 1.0F, blue = 1.0F, alpha = 0.8F; 
 
         if (this.active) {
             if (this.isHovered()) {
-                // EXAGGERATED ICON GLOW EFFECT FOR DEBUGGING: Make it very bright/white
-                red = 2.0F; // Significantly over 1.0 for a very strong glow
+                
+                red = 2.0F; 
                 green = 2.0F;
                 blue = 2.0F;
-                alpha = 1.0F; // Fully opaque on hover
+                alpha = 1.0F; 
             }
         } else {
-            // Inactive state: dim the icon
-            alpha = 0.4F; // More transparent if inactive
+           
+            alpha = 0.4F; 
         }
 
-        // Apply color and alpha to the icon drawing
+       
+        float targetScale = (this.active && this.isHovered()) ? 1.08F : 1.0F;
+        currentScale += (targetScale - currentScale) * 0.25F;
+
+        
         RenderSystem.setShaderColor(red, green, blue, alpha);
         RenderSystem.setShaderTexture(0, iconTexture);
 
-        // Draw the icon within the button bounds
+        
+        context.getMatrices().push();
+        context.getMatrices().translate(getX() + getWidth() / 2.0F, getY() + getHeight() / 2.0F, 0);
+        context.getMatrices().scale(currentScale, currentScale, 1.0F);
+        context.getMatrices().translate(-(getX() + getWidth() / 2.0F), -(getY() + getHeight() / 2.0F), 0);
         context.drawTexture(iconTexture, getX(), getY(), 0, 0, getWidth(), getHeight(), getWidth(), getHeight());
+        context.getMatrices().pop();
 
-        // Reset shader color to default for subsequent renders
+        
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
 
-        // IMPORTANT: DO NOT call super.render() here if you want *only* the icon to glow.
-        // If super.render() is called, it would draw the TransparentButtonWidget's default background/overlay.
-        // We are intentionally skipping it to ensure only the icon itself is affected.
     }
 }

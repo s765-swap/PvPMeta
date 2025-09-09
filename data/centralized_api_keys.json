@@ -1,0 +1,18 @@
+{
+  "sample_key_1": {
+    "installationId": "sample_installation_1",
+    "clientFingerprint": "sample_fingerprint_1",
+    "createdAt": 1755441333455,
+    "lastUsed": 0,
+    "isActive": true,
+    "requestCount": 0
+  },
+  "sample_key_2": {
+    "installationId": "sample_installation_2",
+    "clientFingerprint": "sample_fingerprint_2",
+    "createdAt": 1755441333525,
+    "lastUsed": 0,
+    "isActive": true,
+    "requestCount": 0
+  }
+}

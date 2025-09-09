@@ -10,7 +10,10 @@ import net.minecraft.client.sound.PositionedSoundInstance;
 import com.swapnil.titlemod.TitleMod;
 
 public class TransparentButtonWidget extends ButtonWidget {
-    private boolean wasHovered = false; // Track hover state for sound
+    private boolean wasHovered = false; 
+    private float externalAlpha = 1.0F;
+    private float externalYOffset = 0.0F;
+    private float externalXOffset = 0.0F;
 
     public TransparentButtonWidget(int x, int y, int width, int height, Text message, PressAction onPress) {
         super(x, y, width, height, message, onPress, (Supplier<MutableText> narrationSupplier) -> narrationSupplier.get());
@@ -18,13 +21,14 @@ public class TransparentButtonWidget extends ButtonWidget {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        // IMPORTANT: DO NOT call super.render() here, as it draws the default button background.
-        // We are completely custom drawing this button.
+      
 
-        int textColor = 0xFFFFFF; // Default white text
-        int backgroundColor = 0x00000000; // Fully transparent background by default
 
-        // Play sound on hover entry
+
+        int textColor = 0xFFFFFF; 
+        int backgroundColor = 0x00000000; 
+
+        
         if (this.isHovered() && !wasHovered) {
             MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(TitleMod.BUTTON_HOVER_SOUND, 1.0F));
         }
@@ -32,26 +36,59 @@ public class TransparentButtonWidget extends ButtonWidget {
 
         if (this.active) {
             if (this.isHovered()) {
-                // Refined Hover Effect: Faint white overlay, subtle golden text
-                textColor = 0xFFFFAA; // Subtle golden/yellow on hover
-                backgroundColor = 0x20FFFFFF; // Faint white overlay on hover (20% opacity)
+               
+                textColor = 0xFFFFAA;
+                backgroundColor = 0x20FFFFFF; 
+
             }
         } else {
-            textColor = 0x808080; // Gray out text if inactive
+            textColor = 0x808080;
         }
 
-        // Draw subtle background fill if it's not fully transparent (i.e., on hover)
-        if (backgroundColor != 0x00000000) {
-            context.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), backgroundColor);
+        
+        context.getMatrices().push();
+        context.getMatrices().translate(externalXOffset, externalYOffset, 0);
+
+        
+        int finalBg = backgroundColor;
+        if (finalBg != 0x00000000) {
+            int a = (finalBg >>> 24) & 0xFF;
+            int scaledA = Math.max(0, Math.min(255, (int)(a * externalAlpha)));
+            finalBg = (scaledA << 24) | (finalBg & 0x00FFFFFF);
+        }
+        int finalText = textColor;
+        {
+            int baseA = 0xFF;
+            int scaledA = Math.max(0, Math.min(255, (int)(baseA * externalAlpha)));
+            finalText = (scaledA << 24) | (textColor & 0x00FFFFFF);
         }
 
-        // Draw the button text centered
+     
+        if (finalBg != 0x00000000) {
+            context.fill(this.getX(), this.getY(), this.getX() + this.getWidth(), this.getY() + this.getHeight(), finalBg);
+        }
+
+        
         context.drawCenteredTextWithShadow(
                 MinecraftClient.getInstance().textRenderer,
                 this.getMessage(),
                 this.getX() + this.getWidth() / 2,
                 this.getY() + (this.getHeight() - 8) / 2,
-                textColor // Use the determined text color
+                finalText 
         );
+
+        context.getMatrices().pop();
+    }
+
+    public void setExternalAlpha(float alpha) {
+        this.externalAlpha = alpha;
+    }
+
+    public void setExternalYOffset(float yOffset) {
+        this.externalYOffset = yOffset;
+    }
+
+    public void setExternalXOffset(float xOffset) {
+        this.externalXOffset = xOffset;
     }
 }

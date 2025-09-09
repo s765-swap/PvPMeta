@@ -5,7 +5,10 @@
   "mixins": [],
   "client": [
     "ConnectScreenInvoker",
-    "TitleScreenMixin"
+    "TitleScreenMixin",
+    "MinecraftClientMixin",
+    "GameInitMixin",
+    "GameStartupMixin"
   ],
   "injectors": {
     "defaultRequire": 1

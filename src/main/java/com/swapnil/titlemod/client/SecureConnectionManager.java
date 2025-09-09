@@ -14,12 +14,12 @@ public class SecureConnectionManager {
     
     public static String decryptServerIP(String encryptedToken) {
         try {
-            // First, validate the session token
+            
             if (!validateSessionToken(encryptedToken)) {
                 throw new SecurityException("Invalid session token");
             }
             
-            // Decrypt the actual IP
+            
             byte[] key = DECRYPTION_KEY.getBytes();
             byte[] encrypted = Base64.getDecoder().decode(encryptedToken.split(":")[0]);
             byte[] result = new byte[encrypted.length];
@@ -31,7 +31,7 @@ public class SecureConnectionManager {
             return new String(result);
         } catch (Exception e) {
             LOGGER.severe("Failed to decrypt server IP: " + e.getMessage());
-            return "localhost"; // Fallback
+            return "localhost"; 
         }
     }
     
@@ -47,8 +47,8 @@ public class SecureConnectionManager {
         }
     }
     
-    // Obfuscate the actual IP in logs
+    
     public static String maskIPForLogs(String ip) {
-        return "***.***.***.***"; // Completely masked in logs
+        return "***.***.***.***"; 
     }
 }

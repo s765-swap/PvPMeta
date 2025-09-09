@@ -1,12 +1,11 @@
 pluginManagement {
     repositories {
-        gradlePluginPortal() // Standard Gradle plugins repository
+        gradlePluginPortal() 
         maven {
             name = 'Fabric'
-            url = 'https://maven.fabricmc.net/' // Repository where Fabric Loom plugin is hosted
+            url = 'https://maven.fabricmc.net/' 
         }
     }
 }
 
-// Your project's root name. This should match your project's root folder name.
 rootProject.name = 'titlemod'

@@ -13,6 +13,7 @@ import net.minecraft.util.Formatting;
 import com.swapnil.titlemod.data.MatchLogEntryDTO;
 import com.swapnil.titlemod.gui.TransparentButtonWidget;
 import com.swapnil.titlemod.network.RemoteDataLoader;
+import com.swapnil.titlemod.util.Anim;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -30,15 +31,23 @@ public class MatchLogScreen extends Screen {
     private List<MatchLogEntryDTO> duelEntries = new ArrayList<>();
     private List<MatchLogEntryDTO> filteredDuelEntries = new ArrayList<>();
 
-    // The current scroll offset, in pixels. This is a much better way to handle it.
+ 
     private double scrollOffset = 0.0;
     private static final int ENTRY_HEIGHT = 40;
-    private static final int LIST_PADDING = 5; // Added a small padding for visuals
-    private static final int SCROLL_SPEED = 10; // Pixels to scroll per mouse wheel click
-    private int maxScrollOffset = 0; // Max scrollable pixel value
+    private static final int LIST_PADDING = 5; 
+    private static final int SCROLL_SPEED = 10;
+    private int maxScrollOffset = 0; 
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
             .withZone(ZoneId.systemDefault());
+
+    private final Anim.Manager animManager = new Anim.Manager();
+    private Anim.Tween uiAlpha;
+    private Anim.Tween uiYOffset;
+    private Anim.Tween exitAlpha;
+    private Anim.Tween exitYOffset;
+    private boolean exiting = false;
+    private Screen nextScreen = null;
 
     public MatchLogScreen(Screen parent) {
         super(Text.literal("Match Log"));
@@ -46,29 +55,41 @@ public class MatchLogScreen extends Screen {
 
     @Override
     protected void init() {
-        // Clear all previous widgets to prevent duplicates on resize
+
         this.clearChildren();
 
         this.addDrawableChild(new TransparentButtonWidget(15, 15, 90, 20,
                 Text.literal("← Back").formatted(Formatting.BOLD),
                 btn -> {
                     MinecraftClient.getInstance().getSoundManager().play(PositionedSoundInstance.master(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-                    MinecraftClient.getInstance().setScreen(new CustomTitleScreen());
+                    startExitTo(new CustomTitleScreen());
                 }
         ));
 
-        // Re-calculate max scroll offset on screen initialization or resize
+      
         updateMaxScrollOffset();
 
         fetchMatchLogData();
+
+        
+        uiAlpha = Anim.Utils.fadeIn(animManager, 800);
+        uiYOffset = Anim.Utils.slideIn(animManager, 24f, 850);
+    }
+
+    private void startExitTo(Screen screen) {
+        if (exiting) return;
+        exiting = true;
+        nextScreen = screen;
+        exitAlpha = Anim.Utils.fadeOut(animManager, 480);
+        exitYOffset = Anim.Utils.slideOut(animManager, 20f, 480);
     }
 
     private void updateMaxScrollOffset() {
-        int listHeight = this.height - 80 - 50; // listY to bottom padding
+        int listHeight = this.height - 80 - 50; 
         int totalContentHeight = filteredDuelEntries.size() * ENTRY_HEIGHT;
         this.maxScrollOffset = Math.max(0, totalContentHeight - listHeight);
 
-        // Clamp the scroll offset in case the number of entries has changed
+  
         this.scrollOffset = Math.max(0, Math.min(this.scrollOffset, this.maxScrollOffset));
     }
 
@@ -100,7 +121,6 @@ public class MatchLogScreen extends Screen {
                 this.filteredDuelEntries.sort(Comparator.comparing(MatchLogEntryDTO::getTimestamp).reversed());
                 MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(Text.literal("§a[Match Log] §fFiltered " + this.filteredDuelEntries.size() + " duels for your profile."));
 
-                // Recalculate max scroll offset after fetching new data
                 updateMaxScrollOffset();
             });
         });
@@ -108,27 +128,49 @@ public class MatchLogScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
+        animManager.update();
+
         RenderSystem.setShaderTexture(0, BACKGROUND);
         context.drawTexture(BACKGROUND, 0, 0, 0, 0, this.width, this.height, this.width, this.height);
 
-        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(this.getTitle().getString()).formatted(Formatting.BOLD, Formatting.AQUA), this.width / 2, 25, 0xFFFFFF);
+        float alpha = uiAlpha == null ? 1f : uiAlpha.get();
+        float yOffset = uiYOffset == null ? 0f : uiYOffset.get();
+        if (exiting) {
+            float ea = exitAlpha == null ? 1f : exitAlpha.get();
+            float ey = exitYOffset == null ? 0f : exitYOffset.get();
+            alpha *= ea;
+            yOffset += ey;
+        }
 
-        // --- THE CRITICAL FIX: ENABLE SCISSORING BEFORE DRAWING THE LIST ---
-        // This clips all rendering to only happen inside the specified rectangle.
+        context.setShaderColor(1F, 1F, 1F, alpha);
+        context.drawCenteredTextWithShadow(this.textRenderer, Text.literal(this.getTitle().getString()).formatted(Formatting.BOLD, Formatting.AQUA), this.width / 2, 25 + (int)yOffset, 0xFFFFFF);
+        context.setShaderColor(1F, 1F, 1F, 1F);
+
+
         int listX = this.width / 2 - 200;
         int listY = 80;
         int listWidth = 400;
         int listHeight = this.height - listY - 50;
 
         context.enableScissor(listX, listY, listX + listWidth, listY + listHeight);
+        context.getMatrices().push();
+        context.getMatrices().translate(0, yOffset, 0);
         drawMatchLogEntries(context, mouseX, mouseY, listX, listY, listWidth, listHeight);
+        context.getMatrices().pop();
         context.disableScissor();
-        // --- END OF FIX ---
-
-        // Render a simple scrollbar to visualize the position, outside of the scissor region
+      
+        context.getMatrices().push();
+        context.getMatrices().translate(0, yOffset, 0);
         drawScrollbar(context, listX + listWidth + 5, listY, 10, listHeight);
+        context.getMatrices().pop();
 
         super.render(context, mouseX, mouseY, delta);
+
+       
+        if (exiting && exitAlpha != null && exitAlpha.isFinished() && nextScreen != null) {
+            MinecraftClient.getInstance().setScreen(nextScreen);
+            nextScreen = null;
+        }
     }
 
     private void drawMatchLogEntries(DrawContext context, int mouseX, int mouseY, int listX, int listY, int listWidth, int listHeight) {
@@ -142,10 +184,10 @@ public class MatchLogScreen extends Screen {
 
         for (int i = 0; i < filteredDuelEntries.size(); i++) {
             MatchLogEntryDTO entry = filteredDuelEntries.get(i);
-            // We use the scrollOffset to shift the position of each entry
+            
             int entryY = listY + LIST_PADDING + (i * ENTRY_HEIGHT) - (int) scrollOffset;
 
-            // Only draw hover effect for entries that are visible and within the bounds
+            
             if (entryY >= listY && entryY + ENTRY_HEIGHT <= listY + listHeight && mouseX >= listX && mouseX <= listX + listWidth && mouseY >= entryY && mouseY <= entryY + ENTRY_HEIGHT) {
                 context.fill(listX, entryY, listX + listWidth, entryY + ENTRY_HEIGHT, 0x30FFFFFF);
             }
@@ -187,9 +229,9 @@ public class MatchLogScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
-        // Adjust scroll offset based on mouse wheel movement
+       
         scrollOffset -= amount * SCROLL_SPEED;
-        // Clamp the scroll offset to prevent scrolling past the start or end
+        
         scrollOffset = Math.max(0, Math.min(scrollOffset, maxScrollOffset));
         return true;
     }

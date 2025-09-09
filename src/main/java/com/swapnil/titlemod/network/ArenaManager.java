@@ -5,7 +5,7 @@ import net.minecraft.text.Text;
 
 public class ArenaManager {
     public static void startMatch(ServerPlayerEntity p1, ServerPlayerEntity p2, String mode) {
-        // Match coordinates (must match MatchmakingServer.java)
+       
         int x1 = 100, y = 70, z1 = 100;
         int x2 = 110, z2 = 100;
 

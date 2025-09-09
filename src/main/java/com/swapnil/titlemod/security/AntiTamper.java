@@ -25,7 +25,7 @@ public class AntiTamper {
                 }
             }
             
-            // Check for IDE debug mode
+            
             String classpath = System.getProperty("java.class.path");
             return classpath.contains("idea_rt.jar") || classpath.contains("eclipse");
         } catch (Exception e) {
@@ -34,78 +34,113 @@ public class AntiTamper {
     }
     
     public static boolean isValidEnvironment() {
+        
         if (isDebugEnvironment()) {
+            SecureLogger.logSecurityEvent("Debug environment detected");
             return false;
         }
 
-        // Native anti-debugger check (JNI)
-        try {
-            if (!nativeAntiDebugCheck()) {
-                return false;
-            }
-        } catch (Throwable t) {
-            // If native check fails, be suspicious
+        
+        if (!performSecurityChecks()) {
+            SecureLogger.logSecurityEvent("Security checks failed");
             return false;
         }
 
-        // Runtime hash self-check for this class
+        
+        if (!performIntegrityCheck()) {
+            SecureLogger.logSecurityEvent("Integrity check failed");
+            return false;
+        }
+
+        
+        if (detectAnalysisTools()) {
+            SecureLogger.logSecurityEvent("Analysis tools detected");
+            return false;
+        }
+
+        return true;
+    }
+    
+    private static boolean performSecurityChecks() {
         try {
-            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
-            java.io.InputStream is = AntiTamper.class.getResourceAsStream("/com/swapnil/titlemod/security/AntiTamper.class");
-            if (is != null) {
-                byte[] buf = new byte[4096];
-                int len;
-                while ((len = is.read(buf)) > 0) {
-                    md.update(buf, 0, len);
-                }
-                is.close();
-                byte[] hash = md.digest();
-                // Replace with your expected hash (update after every build!)
-                String expected = "REPLACE_WITH_EXPECTED_HASH";
-                StringBuilder sb = new StringBuilder();
-                for (byte b : hash) sb.append(String.format("%02x", b));
-                if (!sb.toString().equals(expected)) {
+            
+            String[] debugTools = {
+                "jdwp", "debug", "agent", "jdi", "jdb", "jstack", "jmap", "jhat", "jvisualvm"
+            };
+            
+            String jvmArgs = System.getProperty("sun.java.command", "").toLowerCase();
+            for (String tool : debugTools) {
+                if (jvmArgs.contains(tool)) {
                     return false;
                 }
             }
+            
+            
+            String classpath = System.getProperty("java.class.path", "").toLowerCase();
+            if (classpath.contains("idea_rt.jar") || classpath.contains("eclipse") || 
+                classpath.contains("netbeans") || classpath.contains("vscode")) {
+                return false;
+            }
+            
+            return true;
         } catch (Exception e) {
             return false;
         }
-
-        // Check for more decompilers
-        String[] moreDecompilers = {"cfr", "fernflower", "procyon", "jadx", "jd-gui"};
-        String classpath = System.getProperty("java.class.path", "");
-        for (String dc : moreDecompilers) {
-            if (classpath.toLowerCase().contains(dc)) {
-                return false;
+    }
+    
+    private static boolean performIntegrityCheck() {
+        try {
+            
+            Class.forName("com.swapnil.titlemod.TitleMod");
+            Class.forName("com.swapnil.titlemod.security.SecureIPManager");
+            Class.forName("com.swapnil.titlemod.security.HTTPRequestProtector");
+            
+            
+            
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+    
+    private static boolean detectAnalysisTools() {
+        try {
+            
+            String[] decompilers = {
+                "cfr", "fernflower", "procyon", "jadx", "jd-gui", "recaf", "bytecode-viewer"
+            };
+            
+            String classpath = System.getProperty("java.class.path", "").toLowerCase();
+            for (String decompiler : decompilers) {
+                if (classpath.contains(decompiler)) {
+                    return true;
+                }
             }
-        }
-
-        try {
-            // Check for decompiler presence
-            Class.forName("org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler");
+            
+            
+            try {
+                Class.forName("org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler");
+                return true;
+            } catch (ClassNotFoundException e) {
+                
+            }
+            
+            try {
+                Class.forName("com.sun.jdi.VirtualMachine");
+                return true;
+            } catch (ClassNotFoundException e) {
+               
+            }
+            
             return false;
-        } catch (ClassNotFoundException e) {
-            // Expected
+        } catch (Exception e) {
+            return true; 
         }
-        try {
-            // Check for debug tools
-            Class.forName("com.sun.jdi.VirtualMachine");
-            return false;
-        } catch (ClassNotFoundException e) {
-            // Expected
-        }
-        return true;
     }
 
-    // Native anti-debugger stub (JNI)
-    private static native boolean nativeAntiDebugCheck();
-    static {
-        try {
-            System.loadLibrary("titlemod_antidebug");
-        } catch (Throwable t) {
-            // Ignore, will fail safe in isValidEnvironment
-        }
+   
+    private static boolean nativeAntiDebugCheck() {
+        return true;
     }
     
     public static String getDecoyIP(int seed) {

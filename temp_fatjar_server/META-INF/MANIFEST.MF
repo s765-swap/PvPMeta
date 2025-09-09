@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Main-Class: com.swapnil.titlemod.server.MatchmakingServer
+Class-Path: lib/gson-2.8.9.jar
+Created-By: 17.0.16 (Eclipse Adoptium)
+
