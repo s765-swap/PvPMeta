@@ -5,5 +5,7 @@ You can find most of the addons on my public repos u can use those. stand alone 
 Everything takes time and we would appreciate your donation if anyone want to DM me on discord: s765 for hiring purposes this project was left because of conflict
 with the another owner. dont worry to DM me even to say thanks lmao it would mean alot to me. 
 
+note: Dont dm me with negative stuff its a request LMAo
+
 MY dc username is: s765 
 email: swapnilaaghav2007@gmail.com
