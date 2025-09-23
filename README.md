@@ -9,3 +9,4 @@ note: Dont dm me with negative stuff its a request LMAo
 
 MY dc username is: s765 
 email: swapnilaaghav2007@gmail.com
+<img width="1366" height="747" alt="Screenshot 2025-09-23 081312" src="https://github.com/user-attachments/assets/7a2cf3c5-a17d-4d10-9ac2-8517e57d6cf3" />
